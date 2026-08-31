@@ -347,3 +347,12 @@ Podés encadenar `parker` con otras herramientas del ecosistema en una única l�
 parker audit-symbols ./lib/libtda.so include/tda.h
 ````
 
+---
+
+(manual-parker-seccion-plugins)=
+## 9. Extensión, Desarrollo de Plugins y API Python
+
+Para crear tus propias reglas, conectores de evaluación o integrar `parker` programáticamente en pipelines de CI/CD:
+
+- 👉 **Consultá la guía completa:** [Guía de Extensión y Creación de Plugins](plugins.md)
+
