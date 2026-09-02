@@ -4,6 +4,33 @@
 
 ---
 
+## 🎯 Alcance
+
+### Qué cubre
+- Auditoría de Application Binary Interface (ABI) y control de visibilidad de símbolos en bibliotecas compartidas C (`.so` / `.dll`).
+- Detección de fuga de símbolos internos: advertencia sobre funciones globales no documentadas que carecen del calificador `static`.
+- Verificación de consistencia entre prototipos de funciones públicas de la cabecera `.h` y la tabla de exportación de símbolos en el binario compilado.
+
+### Qué no cubre (Límites y Delegación)
+- Verificación de opacidad de TDAs en código fuente (delegado a `motoko`).
+- Auditoría de alineación y padding de structs (delegado a `brett`).
+- Medición de costos de saltos o tablas de salto (delegado a `rachel`).
+
+---
+
+## 📋 Requisitos
+
+### Requisitos de Sistema y Entorno
+- Linux / WSL / POSIX. Python >= 3.10.
+
+### Dependencias Externas y Binarios
+- `nm`, `readelf` u `objdump`.
+
+### Integración en el Ecosistema
+- CLI `parker`. Plugin registrado en `ripley.plugins` (`abi_audit`).
+
+---
+
 ## 🚀 Uso Rápido
 
 ```bash
