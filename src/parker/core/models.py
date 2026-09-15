@@ -45,6 +45,7 @@ class AbiIssue(BaseModel):
 
 
 class AbiReport(BaseModel):
+    schema_version: str = "1.0.0"
     library_path: Optional[str] = None
     header_path: Optional[str] = None
     total_symbols_exported: int = 0

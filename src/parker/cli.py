@@ -18,7 +18,10 @@ console = Console()
 
 def generar_seccion_markdown(report) -> str:
     """Genera sección de auditoría de ABI y visibilidad de símbolos para Dredd."""
-    lines = ["## Auditoría de ABI y Visibilidad de Símbolos (Parker)\n"]
+    lines = [
+        "<!-- dredd-section: parker v1.0.0 -->\n",
+        "## Auditoría de ABI y Visibilidad de Símbolos (Parker)\n",
+    ]
     lines.append(f"- **Cabecera analizada:** `{Path(report.header_file).name}`")
     if report.binary_file:
         lines.append(f"- **Binario contrastado:** `{Path(report.binary_file).name}`")
@@ -31,7 +34,10 @@ def generar_seccion_markdown(report) -> str:
         lines.append("| Símbolo | Tipo | Severidad | Diagnóstico | Sugerencia |")
         lines.append("| :--- | :---: | :---: | :--- | :--- |")
         for iss in report.issues:
-            lines.append(f"| `{iss.symbol_name}` | `{iss.issue_type}` | **{iss.severity}** | {iss.message} | {iss.suggestion} |")
+            sym_limpio = iss.symbol_name.replace("|", "&#124;")
+            msg_limpio = iss.message.replace("|", "&#124;")
+            sug_limpio = iss.suggestion.replace("|", "&#124;")
+            lines.append(f"| `{sym_limpio}` | `{iss.issue_type}` | **{iss.severity}** | {msg_limpio} | {sug_limpio} |")
         lines.append("")
     return "\n".join(lines)
 
