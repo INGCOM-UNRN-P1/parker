@@ -1,5 +1,6 @@
 """Tests unitarios y de integración para PARKER."""
 
+import json
 from pathlib import Path
 from typer.testing import CliRunner
 from parker.cli import app
@@ -8,6 +9,18 @@ from parker.core.symbol_inspector import parse_header_declarations
 from parker.plugins.ripley_plugin import ParkerPlugin
 
 runner = CliRunner()
+
+
+def test_cli_doctor():
+    res = runner.invoke(app, ["doctor"])
+    assert res.exit_code == 0
+    assert "doctor" in res.output.lower()
+
+    res_json = runner.invoke(app, ["doctor", "--json"])
+    assert res_json.exit_code == 0
+    data = json.loads(res_json.output)
+    assert data["herramienta"] == "parker"
+    assert data["ok"] is True
 
 
 def test_parse_header_declarations(tmp_path):
