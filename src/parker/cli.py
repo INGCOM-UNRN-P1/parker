@@ -2,11 +2,11 @@
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 import typer
 from rich.console import Console
 from rich.table import Table
-from parker.core.abi_checker import check_abi_compliance
+from parker.core.abi_checker import auditar_abi, check_abi_project
 from parker.core.report import print_abi_report
 
 app = typer.Typer(
@@ -15,6 +15,7 @@ app = typer.Typer(
     add_completion=True
 )
 console = Console()
+err_console = Console(stderr=True)
 
 
 def generar_seccion_markdown(report) -> str:
@@ -23,36 +24,58 @@ def generar_seccion_markdown(report) -> str:
         "<!-- dredd-section: parker v1.0.0 -->\n",
         "## Auditoría de ABI y Visibilidad de Símbolos (Parker)\n",
     ]
-    lines.append(f"- **Cabecera analizada:** `{Path(report.header_file).name}`")
-    if report.binary_file:
-        lines.append(f"- **Binario contrastado:** `{Path(report.binary_file).name}`")
-    lines.append(f"- **Símbolos declarados:** {len(report.declared_symbols)}")
+    if len(report.headers) == 1:
+        lines.append(f"- **Cabecera analizada:** `{report.headers[0]}`")
+    else:
+        lines.append(f"- **Cabeceras analizadas:** {len(report.headers)}")
+    if report.binaries:
+        lines.append(f"- **Binarios contrastados:** {', '.join(f'`{b}`' for b in report.binaries)}")
+    lines.append(f"- **Símbolos declarados:** {report.total_declarations_in_header}")
     lines.append(f"- **Problemas de ABI detectados:** {len(report.issues)}\n")
-    if report.passed:
+    if not report.issues:
         lines.append("> [!TIP]\n> **Conformidad ABI:** Todos los símbolos exportados coinciden limpiamente con las declaraciones de la cabecera sin rupturas de interfaz.\n")
     else:
-        lines.append("> [!WARNING]\n> **Discrepancias de ABI:** Se detectaron símbolos faltantes, visibilidad incorrecta o divergencias de tipos.\n")
+        if report.passed:
+            lines.append("> [!NOTE]\n> **Advertencias de ABI:** no hay discrepancias críticas, pero hay puntos a revisar.\n")
+        else:
+            lines.append("> [!WARNING]\n> **Discrepancias de ABI:** Se detectaron símbolos faltantes, visibilidad incorrecta o divergencias de tipos.\n")
         lines.append("| Símbolo | Tipo | Severidad | Diagnóstico | Sugerencia |")
         lines.append("| :--- | :---: | :---: | :--- | :--- |")
         for iss in report.issues:
             sym_limpio = iss.symbol_name.replace("|", "&#124;")
             msg_limpio = iss.message.replace("|", "&#124;")
             sug_limpio = iss.suggestion.replace("|", "&#124;")
-            lines.append(f"| `{sym_limpio}` | `{iss.issue_type}` | **{iss.severity}** | {msg_limpio} | {sug_limpio} |")
+            lines.append(f"| `{sym_limpio}` | `{iss.code}` | **{iss.severity}** | {msg_limpio} | {sug_limpio} |")
         lines.append("")
     return "\n".join(lines)
+
+
+def _auditar(destino: Path, binarios: Optional[List[Path]]):
+    """Un archivo se toma como cabecera; un directorio como proyecto (cabeceras y binarios descubiertos)."""
+    if destino.is_dir():
+        report = check_abi_project(destino, binarios)
+        if not report.headers:
+            err_console.print(f"[bold red]Error:[/bold red] no hay cabeceras .h en {destino}.")
+            raise typer.Exit(code=2)
+        return report
+    if destino.suffix != ".h":
+        err_console.print(
+            f"[bold red]Error:[/bold red] {destino.name} no es una cabecera .h ni un directorio."
+        )
+        raise typer.Exit(code=2)
+    return auditar_abi([destino], binarios or [])
 
 
 @app.command("audit")
 @app.command("check")
 def audit(
-    header: Path = typer.Argument(..., help="Archivo de cabecera C (.h) a auditar", exists=True),
-    binary: Optional[Path] = typer.Option(None, "--binary", "-b", help="Biblioteca compartida (.so) o archivo objeto (.o) a contrastar", exists=True),
+    header: Path = typer.Argument(..., help="Cabecera C (.h) o directorio de proyecto (cabeceras y .so/.o descubiertos)", exists=True),
+    binary: Optional[List[Path]] = typer.Option(None, "--binary", "-b", help="Biblioteca compartida (.so) u objeto (.o) a contrastar; se puede repetir", exists=True),
     json_output: bool = typer.Option(False, "--json", help="Emitir salida en formato JSON estructurado"),
     output_md: Optional[Path] = typer.Option(None, "--md", "--output-md", help="Generar sección de reporte en formato Markdown para fusión en Dredd."),
 ):
-    """Audita la cabecera y contrasta los símbolos exportados por la biblioteca."""
-    report = check_abi_compliance(header, binary)
+    """Audita la cabecera (o todas las de un directorio) y contrasta los símbolos exportados por los binarios."""
+    report = _auditar(header, binary)
 
     if output_md:
         md_text = generar_seccion_markdown(report)
@@ -72,12 +95,12 @@ def audit(
 
 @app.command("report")
 def report_cmd(
-    header: Path = typer.Argument(..., help="Archivo de cabecera C (.h) a auditar", exists=True),
+    header: Path = typer.Argument(..., help="Cabecera C (.h) o directorio de proyecto", exists=True),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Ruta de destino del archivo Markdown."),
-    binary: Optional[Path] = typer.Option(None, "--binary", "-b", help="Biblioteca compartida (.so) u objeto (.o)."),
+    binary: Optional[List[Path]] = typer.Option(None, "--binary", "-b", help="Biblioteca compartida (.so) u objeto (.o); se puede repetir.", exists=True),
 ):
     """Genera directamente la sección de reporte Markdown de PARKER para Dredd."""
-    report = check_abi_compliance(header, binary)
+    report = _auditar(header, binary)
     md_content = generar_seccion_markdown(report)
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)

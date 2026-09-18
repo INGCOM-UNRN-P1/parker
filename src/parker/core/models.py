@@ -48,6 +48,8 @@ class AbiReport(BaseModel):
     schema_version: str = "1.0.0"
     library_path: Optional[str] = None
     header_path: Optional[str] = None
+    headers: List[str] = Field(default_factory=list)
+    binaries: List[str] = Field(default_factory=list)
     total_symbols_exported: int = 0
     total_declarations_in_header: int = 0
     issues: List[AbiIssue] = Field(default_factory=list)
