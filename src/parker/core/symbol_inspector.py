@@ -56,8 +56,21 @@ def parse_header_declarations(header_content: str) -> List[HeaderDeclaration]:
     return declarations
 
 
+class BinarioNoInspeccionable(Exception):
+    """No se pudieron leer los símbolos del binario (nm ausente o formato inválido).
+
+    Es distinto de "el binario no exporta nada": confundirlos hacía que un
+    archivo que no es ELF, o un `nm` que falla, se leyera como 0 símbolos y
+    PRK003 acusara de "no implementada" a cada función de la cabecera.
+    """
+
+
 def inspect_elf_symbols(binary_path: Path) -> List[ExportedSymbol]:
-    """Extrae símbolos de un binario (.so / .o) utilizando nm o readelf."""
+    """Extrae símbolos de un binario (.so / .o) utilizando nm.
+
+    Lanza `BinarioNoInspeccionable` si no se puede leer; devuelve una lista vacía
+    solo cuando el binario es válido y de verdad no exporta símbolos.
+    """
     symbols = []
     try:
         res = subprocess.run(
@@ -76,6 +89,11 @@ def inspect_elf_symbols(binary_path: Path) -> List[ExportedSymbol]:
                 check=False
             )
             output = res2.stdout
+            if res.returncode != 0 and res2.returncode != 0:
+                detalle = (res2.stderr or res.stderr or "").strip().splitlines()
+                raise BinarioNoInspeccionable(
+                    detalle[-1] if detalle else "nm no pudo leer el archivo"
+                )
 
         for line in output.splitlines():
             parts = line.strip().split()
@@ -97,7 +115,7 @@ def inspect_elf_symbols(binary_path: Path) -> List[ExportedSymbol]:
                     visibility=SymbolVisibility.DEFAULT if sym_type.isupper() else SymbolVisibility.HIDDEN,
                     is_defined=True
                 ))
-    except Exception:
-        pass
+    except FileNotFoundError:
+        raise BinarioNoInspeccionable("la herramienta 'nm' (binutils) no está instalada")
 
     return symbols

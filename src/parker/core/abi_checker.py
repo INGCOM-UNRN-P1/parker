@@ -5,7 +5,11 @@ from typing import List, Optional
 from parker.core.models import (
     AbiReport, AbiIssue, ExportedSymbol, HeaderDeclaration, SymbolVisibility
 )
-from parker.core.symbol_inspector import inspect_elf_symbols, parse_header_declarations
+from parker.core.symbol_inspector import (
+    BinarioNoInspeccionable,
+    inspect_elf_symbols,
+    parse_header_declarations,
+)
 
 
 def check_abi_compliance(
@@ -33,8 +37,25 @@ def check_abi_compliance(
 
     # 2. Chequeo de correspondencia con binario ELF si se provee
     exported_symbols: List[ExportedSymbol] = []
+    inspeccionado = True
     if binary_path and binary_path.exists():
-        exported_symbols = inspect_elf_symbols(binary_path)
+        try:
+            exported_symbols = inspect_elf_symbols(binary_path)
+        except BinarioNoInspeccionable as exc:
+            # Sin poder leer el binario NO se puede afirmar que falte ninguna
+            # función: acusarlas a todas de "no encontradas" era un falso
+            # positivo por cada declaración. Se informa una sola vez que la
+            # verificación no se pudo hacer y se omite la comparación.
+            inspeccionado = False
+            issues.append(AbiIssue(
+                code="PRK000",
+                severity="WARNING",
+                symbol_name=binary_path.name,
+                message=f"No se pudo verificar {binary_path.name} contra la cabecera: {exc}.",
+                location=str(binary_path.name),
+                suggestion="Comprobá que sea un binario ELF (.so/.o) válido y que binutils esté instalado (`parker doctor`).",
+            ))
+    if binary_path and binary_path.exists() and inspeccionado:
         exported_names = {s.name for s in exported_symbols if s.visibility == SymbolVisibility.DEFAULT}
         header_names = {d.name for d in declarations if not d.is_static}
 
