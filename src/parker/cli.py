@@ -114,7 +114,7 @@ def report_cmd(
 def doctor_cmd(
     json_output: bool = typer.Option(False, "--json", help="Emitir diagnóstico en formato JSON estructurado."),
 ) -> None:
-    """Verifica el estado del entorno de auditoría ABI PARKER (Python, nm, readelf, GCC)."""
+    """Verifica el estado del entorno de auditoría ABI PARKER (Python, nm, GCC)."""
     import shutil
     import sys
     diagnostico = []
@@ -133,14 +133,6 @@ def doctor_cmd(
         "estado": "OK" if nm_path else "ADVERTENCIA",
         "requerido": False,
         "detalle": nm_path or "No encontrado (requerido para inspección de símbolos en .so / .o)",
-    })
-
-    readelf_path = shutil.which("readelf")
-    diagnostico.append({
-        "componente": "Herramienta readelf (binutils)",
-        "estado": "OK" if readelf_path else "ADVERTENCIA",
-        "requerido": False,
-        "detalle": readelf_path or "No encontrado (alternativa para inspección de ELF)",
     })
 
     gcc_path = shutil.which("gcc")

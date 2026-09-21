@@ -175,7 +175,7 @@ A continuación se detallan los subcomandos principales disponibles en `parker`:
 | `parker audit-symbols ./lib/libtda.so include/tda.h` | Compara los símbolos exportados por la librería con los prototipos del header. |
 | `parker check-abi --v1 lib_v1.so --v2 lib_v2.so` | Detecta incompatibilidades binarias (ABI breaks) entre versiones. |
 | `parker hide-symbols src/ -o lib_clean.so` | Aplica `__attribute__((visibility("hidden")))` a funciones privadas. |
-| `parker doctor` | Verifica herramientas de introspección binaria (`nm`, `readelf`, `objdump`). |
+| `parker doctor` | Verifica las herramientas de introspección binaria que usa parker (`nm`) y el entorno Python/GCC. |
 
 ````{tip}
 Podés agregar el flag `--json` a la mayoría de los comandos para exportar resultados en formato estructurado o `--md` para generar reportes Markdown para el informe de entrega.
@@ -305,7 +305,7 @@ Ejecutá `make check-parker` antes de cada commit para asegurar que tu código c
 
 La herramienta **`parker`** implementa un motor de alta precisión basado en:
 
-- **Tecnología Núcleo:** `ELF Symbol Table Reader (readelf/nm) + DWARF ABI Comparator + Visibility Attribute Injector`.
+- **Tecnología Núcleo:** `ELF Symbol Table Reader (nm) + comparador de firmas ABI contra cabeceras`.
 - **Aislamiento y Determinismo:** Diseñada para operar sin efectos colaterales en entornos de integración continua (CI), terminales de estudiantes y servidores docentes headless.
 - **Manejo de Errores Pedagógico:** Todo fallo de sintaxis, memoria o lógica se traduce en una acción prescriptiva concreta con su respectiva justificación técnica.
 
@@ -324,7 +324,7 @@ Ninguna herramienta opera de forma aislada. **`parker`** forma parte del pipelin
 graph TD
     SO[libtda.so: Librería Compartida] --> PRK[Parker: Auditor de ABI]
     HDR[include/tda.h: API Pública] --> PRK
-    PRK -->|Inspección Tabla ELF| NM[readelf / nm Engine]
+    PRK -->|Inspección Tabla ELF| NM[nm Engine]
     PRK -->|Ocultamiento de Símbolos| MOT[Motoko: Modularidad Estricta]
     PRK -->|Reporte de Estabilidad ABI| DRD[Dredd: Orquestador Masivo]
 ````

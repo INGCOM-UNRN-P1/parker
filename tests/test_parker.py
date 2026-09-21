@@ -76,3 +76,19 @@ def test_ripley_plugin(tmp_path):
     res = plugin.run({"source_dir": str(tmp_path)})
     assert res["passed"] is True
     assert "issues" in res
+
+
+def test_readme_solo_promete_las_herramientas_que_se_invocan():
+    """PARKER-D0801: solo `nm` se invoca; el README no debe prometer readelf/objdump/.dll."""
+    raiz = Path(__file__).resolve().parents[1]
+    fuente = (raiz / "src/parker/core/symbol_inspector.py").read_text(encoding="utf-8")
+    readme = (raiz / "README.md").read_text(encoding="utf-8")
+    invocadas = {t for t in ("nm", "readelf", "objdump") if f'"{t}"' in fuente or f"'{t}'" in fuente}
+    assert invocadas == {"nm"}
+    requisitos = readme.split("### Dependencias Externas y Binarios")[1].split("###")[0]
+    assert "nm" in requisitos
+    for t in ("readelf", "objdump"):
+        assert f"`{t}` u" not in requisitos and "no se usan" in requisitos
+    assert "`.so` / `.dll`" not in readme
+    r = CliRunner().invoke(app, ["doctor", "--json"])
+    assert "readelf" not in r.output

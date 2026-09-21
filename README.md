@@ -7,7 +7,7 @@
 ## 🎯 Alcance
 
 ### Qué cubre
-- Auditoría de Application Binary Interface (ABI) y control de visibilidad de símbolos en bibliotecas compartidas C (`.so` / `.dll`).
+- Auditoría de Application Binary Interface (ABI) y control de visibilidad de símbolos en bibliotecas compartidas y objetos C en ELF (`.so` / `.o`). Los `.dll` de Windows no se inspeccionan.
 - Detección de fuga de símbolos internos: advertencia sobre funciones globales no documentadas que carecen del calificador `static`.
 - Verificación de consistencia entre prototipos de funciones públicas de la cabecera `.h` y la tabla de exportación de símbolos en el binario compilado.
 
@@ -24,7 +24,7 @@
 - Linux / WSL / POSIX. Python >= 3.10.
 
 ### Dependencias Externas y Binarios
-- `nm`, `readelf` u `objdump`.
+- `nm` (binutils). Es la única herramienta que parker invoca; `readelf` y `objdump` no se usan.
 
 ### Integración en el Ecosistema
 - CLI `parker`. Plugin registrado en `ripley.plugins` (`abi_audit`).
