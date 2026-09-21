@@ -93,3 +93,19 @@ def test_readme_solo_promete_las_herramientas_que_se_invocan():
     assert "`.so` / `.dll`" not in readme
     r = CliRunner().invoke(app, ["doctor", "--json"])
     assert "readelf" not in r.output
+
+
+def test_la_linea_de_cada_declaracion_ignora_menciones_en_comentarios():
+    """PARKER-D0302: el nombre citado en un comentario previo no debe robar la línea."""
+    cabecera = (
+        "/* suma: ver también la función suma_segura */\n"   # 1
+        "// suma se documenta aquí\n"                          # 2
+        "\n"                                                    # 3
+        "int suma(int a, int b);\n"                             # 4
+        "/*\n"                                                  # 5
+        " * multi-línea que menciona resta\n"                   # 6
+        " */\n"                                                 # 7
+        "int resta(int a, int b);\n"                            # 8
+    )
+    lineas = {d.name: d.line_number for d in parse_header_declarations(cabecera)}
+    assert lineas == {"suma": 4, "resta": 8}

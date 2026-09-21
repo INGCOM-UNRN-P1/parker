@@ -10,9 +10,10 @@ from parker.core.models import ExportedSymbol, SymbolType, SymbolVisibility, Hea
 def parse_header_declarations(header_content: str) -> List[HeaderDeclaration]:
     """Extrae declaraciones de funciones públicas desde una cabecera C."""
     declarations = []
-    # Limpiar comentarios
-    clean = re.sub(r'/\*.*?\*/', '', header_content, flags=re.DOTALL)
-    clean = re.sub(r'//.*', '', clean)
+    # Limpiar comentarios conservando sus saltos de línea: así el offset de cada
+    # coincidencia en `clean` se traduce a la línea real del archivo original.
+    clean = re.sub(r'/\*.*?\*/', lambda m: re.sub(r'[^\n]', ' ', m.group(0)), header_content, flags=re.DOTALL)
+    clean = re.sub(r'//.*', lambda m: ' ' * len(m.group(0)), clean)
 
     # Patrón para funciones: tipo nombre(params);
     pattern = re.compile(
@@ -24,7 +25,6 @@ def parse_header_declarations(header_content: str) -> List[HeaderDeclaration]:
         re.MULTILINE
     )
 
-    lines = header_content.splitlines()
     for match in pattern.finditer(clean):
         ret_type = match.group(1).strip()
         fn_name = match.group(2).strip()
@@ -34,12 +34,7 @@ def parse_header_declarations(header_content: str) -> List[HeaderDeclaration]:
         if fn_name in ('typedef', 'struct', 'union', 'enum', 'return', 'if', 'while'):
             continue
 
-        # Encontrar línea aproximada
-        line_no = 1
-        for idx, line in enumerate(lines, 1):
-            if fn_name in line:
-                line_no = idx
-                break
+        line_no = clean.count("\n", 0, match.start(2)) + 1
 
         has_visibility = "__attribute__" in match.group(0) or "visibility" in match.group(0)
         is_static = "static" in ret_type
