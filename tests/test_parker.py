@@ -64,7 +64,8 @@ def test_cli_audit_json(tmp_path):
 
 
 def test_cli_version():
-    res = runner.invoke(app, ["version"])
+    assert runner.invoke(app, ["version"]).exit_code != 0  # PARKER-D0402: ya no es subcomando
+    res = runner.invoke(app, ["--version"])
     assert res.exit_code == 0
     assert "PARKER" in res.output
 

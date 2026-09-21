@@ -167,3 +167,15 @@ def test_el_reporte_markdown_de_un_proyecto_lista_binarios(proyecto):
     assert res.exit_code == 0, res.output
     assert "Cabeceras analizadas:** 2" in res.output
     assert "`a.o`" in res.output and "`src/b.o`" in res.output
+
+
+@necesita_toolchain
+def test_report_refleja_el_veredicto_en_el_exit_code(tmp_path):
+    """PARKER-D0402: report sale 1 si la ABI no concuerda (símbolo declarado ausente del binario)."""
+    h = tmp_path / "api.h"
+    h.write_text("int suma(int a, int b);\n", encoding="utf-8")
+    ausente = _objeto(tmp_path, "otro", "int otra(int a) { return a; }\n")
+    ok = _objeto(tmp_path, "ok", "int suma(int a, int b) { return a + b; }\n")
+
+    assert runner.invoke(app, ["report", str(h), "-b", str(ok)]).exit_code == 0
+    assert runner.invoke(app, ["report", str(h), "-b", str(ausente)]).exit_code == 1
