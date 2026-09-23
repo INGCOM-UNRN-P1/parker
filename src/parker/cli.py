@@ -37,8 +37,9 @@ def main_callback(
 
 def generar_seccion_markdown(report) -> str:
     """Genera sección de auditoría de ABI y visibilidad de símbolos para Dredd."""
+    status = "ok" if report.passed else "fail"
     lines = [
-        "<!-- dredd-section: parker v1.0.0 -->\n",
+        f"<!-- dredd-section: parker, tool=parker, version=1.0.0, status={status} -->\n",
         "## Auditoría de ABI y Visibilidad de Símbolos (Parker)\n",
     ]
     if len(report.headers) == 1:
