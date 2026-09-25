@@ -10,6 +10,7 @@ from parker.core.abi_checker import auditar_abi, check_abi_project
 from parker.core.report import print_abi_report
 
 app = typer.Typer(
+    context_settings={"help_option_names": ["-h", "--help"]},
     name="parker",
     help="Auditor de estabilidad de ABI, visibilidad de símbolos y cabeceras C",
     add_completion=True
