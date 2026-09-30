@@ -53,3 +53,31 @@ parker audit tda_lista.h --json
 - **`PRK001`**: Funciones declaradas `static` dentro de cabeceras públicas.
 - **`PRK002`**: Símbolos exportados en la biblioteca sin declaración en la cabecera (fuga de ABI).
 - **`PRK003`**: Símbolos declarados en cabecera pública no encontrados en la biblioteca compilada.
+
+<!-- p1:referencia:inicio — generado por p1-tools/scripts/readme_generado.py: no editar a mano -->
+
+## Referencia rápida
+
+### Requisitos
+
+- Python ≥ 3.11 y [uv](https://docs.astral.sh/uv/getting-started/installation/).
+- Programas del sistema: `gcc`.
+
+| Sistema | `gcc` |
+|:--|:--|
+| Debian / Ubuntu | `sudo apt install gcc` |
+| Fedora | `sudo dnf install gcc` |
+| Windows | incluido en el entorno de la cátedra (MSYS2 UCRT64) |
+| macOS | `xcode-select --install` (clang como `gcc`) |
+
+### Comandos
+
+| Comando | Descripción |
+|:--|:--|
+| `parker check`, `parker audit` | Audita la cabecera (o todas las de un directorio) y contrasta los símbolos exportados por los binarios. |
+| `parker report` | Genera directamente la sección de reporte Markdown de PARKER para Dredd. |
+| `parker doctor` | Verifica el estado del entorno de auditoría ABI PARKER (Python, nm, GCC). |
+
+Ayuda de cada comando: `parker <comando> -h`.
+
+<!-- p1:referencia:fin -->
