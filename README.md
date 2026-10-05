@@ -44,6 +44,9 @@ parker audit tda_lista.h --binary libtda_lista.so
 
 # Salida estructurada JSON
 parker audit tda_lista.h --json
+
+# Cambios de ABI entre dos entregas de la librería (PRK101 quitada, PRK102 otra firma, PRK104 símbolo no exportado)
+parker diff entrega1/ entrega2/
 ```
 
 ---
@@ -75,6 +78,7 @@ parker audit tda_lista.h --json
 | Comando | Descripción |
 |:--|:--|
 | `parker check`, `parker audit` | Audita la cabecera (o todas las de un directorio) y contrasta los símbolos exportados por los binarios. |
+| `parker diff` | Cambios de ABI entre dos entregas: funciones quitadas o con otra firma (y símbolos que dejaron de exportarse). |
 | `parker report` | Genera directamente la sección de reporte Markdown de PARKER para Dredd. |
 | `parker doctor` | Verifica el estado del entorno de auditoría ABI PARKER (Python, nm, GCC). |
 
@@ -82,7 +86,7 @@ Ayuda de cada comando: `parker <comando> -h`.
 
 ### Salida JSON
 
-Con `--json`, estos comandos emiten el resultado como JSON por la salida estándar, para usarlo desde scripts, ripley o dredd: `parker check`, `parker audit`, `parker doctor`. El de `doctor --json` lleva `schema_version` y `ok`.
+Con `--json`, estos comandos emiten el resultado como JSON por la salida estándar, para usarlo desde scripts, ripley o dredd: `parker check`, `parker audit`, `parker diff`, `parker doctor`. El de `doctor --json` lleva `schema_version` y `ok`.
 
 ### Códigos de salida
 

@@ -100,6 +100,24 @@ def audit(
         raise typer.Exit(code=1)
 
 
+@app.command("diff")
+def diff_cmd(
+    antes: Path = typer.Argument(..., exists=True, help="Cabecera o directorio de la entrega anterior."),
+    despues: Path = typer.Argument(..., exists=True, help="Cabecera o directorio de la entrega nueva."),
+    json_output: bool = typer.Option(False, "--json", help="Emitir salida en formato JSON estructurado"),
+):
+    """Cambios de ABI entre dos entregas: funciones quitadas o con otra firma (y símbolos que dejaron de exportarse)."""
+    from parker.core.cambios import comparar
+
+    report = comparar(antes, despues)
+    if json_output:
+        print(json.dumps(report.model_dump(), indent=2, ensure_ascii=False))
+    else:
+        print_abi_report(report)
+    if not report.passed:
+        raise typer.Exit(code=1)
+
+
 @app.command("report")
 def report_cmd(
     header: Path = typer.Argument(..., help="Cabecera C (.h) o directorio de proyecto", exists=True),
