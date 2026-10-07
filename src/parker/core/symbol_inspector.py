@@ -111,6 +111,6 @@ def inspect_elf_symbols(binary_path: Path) -> List[ExportedSymbol]:
                     is_defined=True
                 ))
     except FileNotFoundError:
-        raise BinarioNoInspeccionable("la herramienta 'nm' (binutils) no está instalada")
+        raise BinarioNoInspeccionable("la herramienta 'nm' (binutils) no está instalada") from None
 
     return symbols
